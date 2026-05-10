@@ -3,10 +3,7 @@ coverage/
 *.log
 .env
 CLAUDE.md
-DISCOVERY.md
-SECRETS.md
 projet_final.*
 GUIDE.md
-PIPELINE_DESIGN.md
 deploy_key
 deploy_key.pub
