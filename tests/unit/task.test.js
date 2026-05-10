@@ -83,6 +83,49 @@ describe('Task Model', () => {
     });
   });
 
+  describe('findByStatus', () => {
+    test('should return tasks matching the given status', async () => {
+      const mockTasks = [{ id: 1, title: 'Task 1', status: 'todo' }];
+      pool.query.mockResolvedValue({ rows: mockTasks });
+
+      const tasks = await Task.findByStatus('todo');
+
+      expect(tasks).toEqual(mockTasks);
+      expect(pool.query).toHaveBeenCalled();
+    });
+
+    test('should return empty array when no tasks match the status', async () => {
+      pool.query.mockResolvedValue({ rows: [] });
+
+      const tasks = await Task.findByStatus('done');
+
+      expect(tasks).toEqual([]);
+    });
+  });
+
+  describe('update', () => {
+    test('should update and return the modified task', async () => {
+      const updatedTask = { id: 1, title: 'Updated', description: 'New desc', status: 'in-progress' };
+      pool.query.mockResolvedValue({ rows: [updatedTask] });
+
+      const task = await Task.update(1, { title: 'Updated', description: 'New desc', status: 'in-progress' });
+
+      expect(task).toEqual(updatedTask);
+      expect(pool.query).toHaveBeenCalledWith(
+        'UPDATE tasks SET title = $1, description = $2, status = $3, updated_at = NOW() WHERE id = $4 RETURNING *',
+        ['Updated', 'New desc', 'in-progress', 1]
+      );
+    });
+
+    test('should return undefined when updating a non-existent task', async () => {
+      pool.query.mockResolvedValue({ rows: [] });
+
+      const task = await Task.update(999, { title: 'Ghost', description: '', status: 'todo' });
+
+      expect(task).toBeUndefined();
+    });
+  });
+
   describe('delete', () => {
     test('should delete and return the removed task', async () => {
       const mockTask = { id: 1, title: 'Task 1' };

@@ -112,4 +112,107 @@ describe('POST /tasks', () => {
     expect(res.body.title).toBe('New Task');
     expect(res.body.status).toBe('todo');
   });
+
+  test('should return 401 without authentication', async () => {
+    const res = await request(app).post('/tasks').send({ title: 'Test' });
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('PUT /tasks/:id', () => {
+  test('should update a task and return 200', async () => {
+    const updated = { id: 1, title: 'Updated', description: 'New', status: 'in-progress' };
+    pool.query.mockResolvedValue({ rows: [updated] });
+
+    const token = generateToken();
+    const res = await request(app)
+      .put('/tasks/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Updated', description: 'New', status: 'in-progress' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('in-progress');
+  });
+
+  test('should return 404 when task does not exist', async () => {
+    pool.query.mockResolvedValue({ rows: [] });
+
+    const token = generateToken();
+    const res = await request(app)
+      .put('/tasks/999')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Ghost', description: '', status: 'todo' });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Task not found');
+  });
+
+  test('should return 401 without authentication', async () => {
+    const res = await request(app).put('/tasks/1').send({ title: 'Test' });
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('DELETE /tasks/:id', () => {
+  test('should delete a task and return success message', async () => {
+    const mockTask = { id: 1, title: 'Task 1' };
+    pool.query.mockResolvedValue({ rows: [mockTask] });
+
+    const token = generateToken();
+    const res = await request(app)
+      .delete('/tasks/1')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe('Task deleted successfully');
+  });
+
+  test('should return 404 when task does not exist', async () => {
+    pool.query.mockResolvedValue({ rows: [] });
+
+    const token = generateToken();
+    const res = await request(app)
+      .delete('/tasks/999')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe('Task not found');
+  });
+
+  test('should return 401 without authentication', async () => {
+    const res = await request(app).delete('/tasks/1');
+    expect(res.status).toBe(401);
+  });
+});
+
+describe('GET /tasks?status=', () => {
+  test('should filter tasks by status', async () => {
+    const mockTasks = [{ id: 1, title: 'Task 1', status: 'todo' }];
+    pool.query.mockResolvedValue({ rows: mockTasks });
+
+    const token = generateToken();
+    const res = await request(app)
+      .get('/tasks?status=todo')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].status).toBe('todo');
+  });
+});
+
+describe('POST /auth/login', () => {
+  test('should return 401 for wrong password', async () => {
+    const hashedPassword = await bcrypt.hash('correctpassword', 10);
+    pool.query.mockResolvedValue({
+      rows: [{ id: 1, username: 'admin', password: hashedPassword }],
+    });
+
+    const res = await request(app)
+      .post('/auth/login')
+      .send({ username: 'admin', password: 'wrongpassword' });
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('Invalid credentials');
+  });
 });
