@@ -5,6 +5,9 @@ IMAGE="ghcr.io/kenzobucky/taskboard:latest"
 CONTAINER="taskboard-app"
 NETWORK="taskboard-net"
 
+echo "==> Logging in to GHCR..."
+echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+
 echo "==> Pulling latest image..."
 docker pull "$IMAGE"
 
