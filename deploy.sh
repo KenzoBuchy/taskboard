@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-IMAGE="ghcr.io/kenzobucky/taskboard:latest"
+IMAGE="${DEPLOY_IMAGE:-ghcr.io/kenzobucky/taskboard:latest}"
 CONTAINER="taskboard-app"
 NETWORK="taskboard-net"
 
