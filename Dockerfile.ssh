@@ -1,0 +1,9 @@
+FROM alpine:3.19
+RUN apk add --no-cache openssh docker-cli curl
+RUN ssh-keygen -A
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
+COPY ssh-entrypoint.sh /entrypoint.sh
+COPY deploy.sh /usr/local/bin/deploy.sh
+RUN chmod +x /entrypoint.sh /usr/local/bin/deploy.sh
+EXPOSE 22
+ENTRYPOINT ["/entrypoint.sh"]

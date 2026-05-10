@@ -69,6 +69,20 @@ describe('POST /auth/login', () => {
 
     expect(res.status).toBe(400);
   });
+
+  test('should return 401 for wrong password', async () => {
+    const hashedPassword = await bcrypt.hash('correctpassword', 10);
+    pool.query.mockResolvedValue({
+      rows: [{ id: 1, username: 'admin', password: hashedPassword }],
+    });
+
+    const res = await request(app)
+      .post('/auth/login')
+      .send({ username: 'admin', password: 'wrongpassword' });
+
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe('Invalid credentials');
+  });
 });
 
 describe('GET /tasks', () => {
@@ -201,18 +215,3 @@ describe('GET /tasks?status=', () => {
   });
 });
 
-describe('POST /auth/login', () => {
-  test('should return 401 for wrong password', async () => {
-    const hashedPassword = await bcrypt.hash('correctpassword', 10);
-    pool.query.mockResolvedValue({
-      rows: [{ id: 1, username: 'admin', password: hashedPassword }],
-    });
-
-    const res = await request(app)
-      .post('/auth/login')
-      .send({ username: 'admin', password: 'wrongpassword' });
-
-    expect(res.status).toBe(401);
-    expect(res.body.error).toBe('Invalid credentials');
-  });
-});
